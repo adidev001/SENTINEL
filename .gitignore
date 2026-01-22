@@ -1,0 +1,23 @@
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Data & Config (Sensitive)
+config.json
+chat_history.json
+data/
+logs/
+
+# Models (Large Files)
+models/
+
+# VS Code
+.vscode/
+
+# Logs
+DEBUG_LOG.md
+*.log

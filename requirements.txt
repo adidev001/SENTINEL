@@ -1,0 +1,17 @@
+# UI
+flet
+
+# System monitoring
+psutil
+GPUtil
+
+# Data & ML
+numpy
+pandas
+scikit-learn
+
+# Security
+keyring
+
+# Local AI (optional for now – can be installed later)
+# llama-cpp-python
