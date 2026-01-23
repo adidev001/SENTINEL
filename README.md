@@ -12,6 +12,16 @@
 [![AI](https://img.shields.io/badge/AI-GPT4All-00D4AA?style=for-the-badge)](https://gpt4all.io/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
+<br/>
+
+### 📥 Download
+
+[![Download SENTINEL](https://img.shields.io/badge/Download-SENTINEL.exe-00D4AA?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/adidev001/SENTINEL/releases/latest/download/SENTINEL.exe)
+
+> **Latest Release:** [View all releases](https://github.com/adidev001/SENTINEL/releases) | **Size:** ~150MB | **Platform:** Windows 10/11
+
+<br/>
+
 [Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-architecture) • [Build](#-building-from-source) • [Contributing](#-contributing)
 
 ---
