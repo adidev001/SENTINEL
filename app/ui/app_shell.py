@@ -38,7 +38,7 @@ def run_ui(page: ft.Page):
     # --------------------------------------------------
     # Window & theme
     # --------------------------------------------------
-    page.title = "SysSentinel AI"
+    page.title = "SENTINEL"
     page.window_width = 1280
     page.window_height = 850
     page.theme = DARK_THEME

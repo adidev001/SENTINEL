@@ -7,21 +7,51 @@ from app.ai.model_manager import ModelManager
 
 CONFIG_FILE = "config.json"
 
+import keyring
+
 def load_config():
-    """Load configuration from file."""
+    """Load configuration from file and system keyring."""
+    cfg = {"ai_mode": "local", "api_key": ""}
+    
+    # Load file config
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, 'r') as f:
-                return json.load(f)
+                file_cfg = json.load(f)
+                cfg.update(file_cfg)
         except:
             pass
-    return {"ai_mode": "local", "api_key": ""}
+            
+    # Load secure API key
+    try:
+        secure_key = keyring.get_password("SENTINEL", "api_key")
+        if secure_key:
+            cfg["api_key"] = secure_key
+    except Exception as e:
+        print(f"Keyring load error: {e}")
+        
+    return cfg
 
 def save_config(config):
-    """Save configuration to file."""
+    """Save configuration to file, excluding sensitive data."""
     try:
+        # Create a copy to modify for saving
+        to_save = config.copy()
+        
+        # Handle API Key securely
+        api_key = to_save.get("api_key")
+        if api_key:
+            try:
+                keyring.set_password("SENTINEL", "api_key", api_key)
+            except Exception as e:
+                print(f"Keyring save error: {e}")
+        
+        # Remove from file payload
+        if "api_key" in to_save:
+            del to_save["api_key"]
+            
         with open(CONFIG_FILE, 'w') as f:
-            json.dump(config, f, indent=2)
+            json.dump(to_save, f, indent=2)
     except Exception as e:
         print(f"Error saving config: {e}")
 

@@ -160,7 +160,7 @@ async def decision_pipeline(
     if should_notify(decision) and throttle.allow():
         intents = map_actions_to_commands(decision.get("actions", []))
         show_toast(
-            title="SysSentinel AI",
+            title="SENTINEL",
             message=f"System health: {health['overall_status']}",
             actions=[i["command_id"] for i in intents]
         )
@@ -215,7 +215,7 @@ async def backend_main():
 # -------------------------------------------------
 async def app_entry(page: ft.Page):
     """Main app entry point."""
-    page.title = "SysSentinel AI"
+    page.title = "SENTINEL"
     page.window_width = 1280
     page.window_height = 850
     page.theme_mode = ft.ThemeMode.DARK

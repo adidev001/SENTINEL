@@ -33,7 +33,7 @@ class AlertManager:
         """
         try:
             toast = Notification(
-                app_id="SysSentinel AI",
+                app_id="SENTINEL",
                 title=title,
                 msg=message,
                 duration=duration,

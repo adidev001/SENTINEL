@@ -1,7 +1,13 @@
 # build.ps1
 Write-Host "Building SysSentinel AI Standalone Executable..."
 
-# Ensure we are in the right environment
+# Activate Virtual Environment
+if (Test-Path ".\.venv\Scripts\Activate.ps1") {
+    . .\.venv\Scripts\Activate.ps1
+    Write-Host "Virtual Environment Activated."
+} else {
+    Write-Host "Warning: .venv not found."
+}
 if (-Not (Test-Path ".\.venv\Scripts\flet.exe")) {
     Write-Host "Error: Flet not found in virtual environment."
     exit 1
@@ -21,7 +27,7 @@ if (Test-Path "SysSentinel.spec") { Remove-Item "SysSentinel.spec" -Force }
 
 # Run Flet Pack
 .\.venv\Scripts\flet.exe pack main.py `
-    --name "SysSentinel" `
+    --name "SENTINEL" `
     --icon "assets/icon.ico" `
     --add-data "assets;assets" `
     --product-name "SysSentinel AI" `

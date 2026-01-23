@@ -15,9 +15,9 @@ def start_tray(on_restore):
         sys.exit(0)
 
     menu = pystray.Menu(
-        pystray.MenuItem("Open SysSentinel", restore),
+        pystray.MenuItem("Open SENTINEL", restore),
         pystray.MenuItem("Exit", exit_app),
     )
 
-    icon = pystray.Icon("SysSentinel", image, "SysSentinel AI", menu)
+    icon = pystray.Icon("SENTINEL", image, "SENTINEL", menu)
     threading.Thread(target=icon.run, daemon=True).start()
