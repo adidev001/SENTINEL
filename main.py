@@ -44,12 +44,22 @@ from app.ui.theme import DARK_THEME, Palette
 # Collectors → EventBus
 # -------------------------------------------------
 async def collect_and_publish(event_bus: EventBus) -> None:
+    # Run collectors in parallel threads to avoid blocking the event loop
+    # This fixes the "slow" UI issue
+    cpu, mem, disk, net, gpu = await asyncio.gather(
+        asyncio.to_thread(collect_cpu),
+        asyncio.to_thread(collect_memory),
+        asyncio.to_thread(collect_disk),
+        asyncio.to_thread(collect_network),
+        asyncio.to_thread(collect_gpu)
+    )
+
     payload = {}
-    payload.update(collect_cpu())
-    payload.update(collect_memory())
-    payload.update(collect_disk())
-    payload.update(collect_network())
-    payload.update(collect_gpu())
+    payload.update(cpu)
+    payload.update(mem)
+    payload.update(disk)
+    payload.update(net)
+    payload.update(gpu)
 
     await event_bus.publish({
         "type": "metrics",

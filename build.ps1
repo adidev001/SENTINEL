@@ -14,8 +14,13 @@ if (-Not (Test-Path ".\.venv\Scripts\flet.exe")) {
 # --name: Executable name
 # --hidden-import: Ensure dynamic imports are caught (e.g. engine implementations)
 
+# Clean previous builds to avoid overwrite prompt
+if (Test-Path "dist") { Remove-Item "dist" -Recurse -Force }
+if (Test-Path "build") { Remove-Item "build" -Recurse -Force }
+if (Test-Path "SysSentinel.spec") { Remove-Item "SysSentinel.spec" -Force }
+
+# Run Flet Pack
 .\.venv\Scripts\flet.exe pack main.py `
-    --noconfirm `
     --name "SysSentinel" `
     --icon "assets/icon.ico" `
     --add-data "assets;assets" `
