@@ -2,6 +2,7 @@ import asyncio
 import flet as ft
 from app.intelligence.local_ai import LocalAIEngine
 from app.intelligence.cloud_ai import CloudAIEngine
+from app.ai.model_manager import ModelManager
 import json
 import os
 
@@ -31,7 +32,12 @@ def view(ai_context=None):
     
     # Determine primary mode
     mode = config.get('ai_mode', 'rag')
-    mode_text = {"rag": "RAG", "local": "Local", "cloud": "Cloud"}.get(mode, "RAG")
+    
+    # Check if local model is actually installed
+    if mode == "local" and not ModelManager.is_model_installed():
+        mode_text = "Local (Model Missing)"
+    else:
+        mode_text = {"rag": "RAG", "local": "Local", "cloud": "Cloud"}.get(mode, "RAG")
     
     messages = ft.Column(expand=True, spacing=10, scroll=ft.ScrollMode.AUTO)
     
@@ -206,7 +212,11 @@ Answer using the data above. If user asks for a command, provide it used specifi
                     rag_engine.set_context(fresh_context_text if fresh_context_text else context_text)
                     ai_resp = rag_engine.generate(user_text)
                 elif current_mode == "local":
-                    ai_resp = local_engine.generate(enhanced_prompt, "")
+                    if not ModelManager.is_model_installed():
+                        ai_resp = "⚠️ Local Model not found. Please go to Settings > AI Capabilities to download it."
+                        used_mode = "System"
+                    else:
+                        ai_resp = local_engine.generate(enhanced_prompt, "")
                 elif current_mode == "cloud":
                     current_cloud_engine = CloudAIEngine(api_key=current_config.get('api_key', ''))
                     ai_resp = current_cloud_engine.generate(enhanced_prompt, "")

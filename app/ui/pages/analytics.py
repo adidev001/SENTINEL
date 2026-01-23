@@ -3,6 +3,7 @@ from app.storage.reader import read_recent_metrics
 from app.ui.components.charts import NeonChart
 from app.ui.theme import Palette
 from app.ml.forecast import ResourceForecaster
+from app.ml.anomaly import AnomalyDetector
 import statistics
 
 def view():
@@ -73,14 +74,12 @@ def view():
     except Exception:
         disk_prediction = disk_vals[-1] if disk_vals else 0
     
-    # Network Prediction (using upload as proxy)
-    net_vals = [m.get("upload_kb", 0) for m in metrics if m.get("upload_kb") is not None]
-    net_avg = statistics.mean(net_vals) if net_vals else 0
+    # Get recent anomalies from database
+    recent_anomalies = AnomalyDetector.get_recent_anomalies(limit=10)
     
     def get_prediction_style(value, resource_type="memory"):
         """Return color and icon based on prediction value."""
         if resource_type == "network":
-            # Network uses different thresholds
             return ft.Colors.GREEN_400, ft.Icons.CHECK_CIRCLE
         
         if value > 90:
@@ -158,17 +157,30 @@ def view():
     cpu_chart = NeonChart(cpu_vals[-30:] if len(cpu_vals) >= 30 else cpu_vals, color=Palette.NEON_BLUE)
     mem_chart = NeonChart(mem_vals[-30:] if len(mem_vals) >= 30 else mem_vals, color=Palette.NEON_PURPLE)
     
-    # Prediction visual
-    forecast_text = f"Next 10min prediction: {mem_prediction:.1f}%"
-    if mem_prediction > 90:
-        forecast_color = ft.Colors.RED_400
-        forecast_icon = ft.Icons.WARNING
-    elif mem_prediction > 75:
-        forecast_color = ft.Colors.ORANGE_400
-        forecast_icon = ft.Icons.TRENDING_UP
-    else:
-        forecast_color = ft.Colors.GREEN_400
-        forecast_icon = ft.Icons.CHECK_CIRCLE
+    # Anomaly History Section
+    def build_anomaly_row(anomaly):
+        severity = anomaly.get("severity", "info")
+        severity_color = ft.Colors.RED_400 if severity == "critical" else ft.Colors.ORANGE_400 if severity == "warning" else ft.Colors.BLUE_400
+        severity_icon = ft.Icons.ERROR if severity == "critical" else ft.Icons.WARNING if severity == "warning" else ft.Icons.INFO
+        
+        timestamp = anomaly.get("timestamp", "")[:16].replace("T", " ")  # Truncate and format
+        
+        return ft.Container(
+            content=ft.Row([
+                ft.Icon(severity_icon, color=severity_color, size=20),
+                ft.Text(timestamp, size=12, color=ft.Colors.GREY_400, width=120),
+                ft.Text(anomaly.get("anomaly_type", "Unknown"), size=12, weight=ft.FontWeight.BOLD, expand=True),
+                ft.Text(f"Score: {anomaly.get('score', 0):.0f}", size=12, color=severity_color),
+            ], spacing=10),
+            padding=8,
+            bgcolor=ft.Colors.BLUE_GREY_900,
+            border_radius=5,
+            border=ft.border.only(left=ft.BorderSide(3, severity_color)),
+        )
+    
+    anomaly_rows = [build_anomaly_row(a) for a in recent_anomalies[:5]] if recent_anomalies else [
+        ft.Text("No anomalies detected yet.", color=ft.Colors.GREY_500, italic=True)
+    ]
 
     return ft.Column(
         [
@@ -217,6 +229,17 @@ def view():
             
             ft.Divider(),
             
+            # Anomaly History Section
+            ft.Text("🔍 Anomaly Detection History", size=18, weight=ft.FontWeight.BOLD),
+            ft.Container(
+                content=ft.Column(anomaly_rows, spacing=5),
+                padding=10,
+                bgcolor=ft.Colors.BLUE_GREY_800,
+                border_radius=10,
+            ),
+            
+            ft.Divider(),
+            
             # Export Section
             ft.Row([
                 ft.Text("Export Data", size=16, weight=ft.FontWeight.BOLD),
@@ -258,3 +281,4 @@ def view():
         spacing=15,
         scroll=ft.ScrollMode.AUTO,
     )
+

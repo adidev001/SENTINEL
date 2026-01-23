@@ -47,6 +47,31 @@ class Fonts:
     MONOSPACE = "Consolas"
 
 # -----------------------------------------------------------------------------
+# Loading Page Colors
+# -----------------------------------------------------------------------------
+class LoadingPageColors:
+    """Color scheme for loading page matching app theme."""
+    
+    # Background colors (matching background.png)
+    BACKGROUND_DARK = "#0A0A0A"
+    BACKGROUND_OVERLAY = Palette.with_opacity(0.7, "#000000")
+    
+    # Accent colors (neon/cyberpunk theme matching Palette)
+    PRIMARY_CYAN = Palette.NEON_BLUE
+    SECONDARY_BLUE = "#0080FF"
+    HIGHLIGHT_GREEN = Palette.NEON_GREEN
+    
+    # Text colors
+    TITLE_PRIMARY = PRIMARY_CYAN
+    TITLE_SECONDARY = Palette.TEXT_PRIMARY
+    SUBTITLE_TEXT = Palette.TEXT_SECONDARY
+    
+    # Button colors
+    BUTTON_BG = Palette.with_opacity(0.8, "#001133")
+    BUTTON_HOVER = Palette.with_opacity(0.9, "#002244")
+    BUTTON_TEXT = PRIMARY_CYAN
+
+# -----------------------------------------------------------------------------
 # Themes
 # -----------------------------------------------------------------------------
 DARK_THEME = ft.Theme(

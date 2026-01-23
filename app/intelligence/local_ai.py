@@ -1,28 +1,29 @@
-from gpt4all import GPT4All
-from pathlib import Path
+from app.ai.model_manager import ModelManager, MODEL_NAME
 
-
-MODEL_PATH = Path(__file__).resolve().parent.parent / "models"
-MODEL_NAME = "orca-mini-3b-gguf2-q4_0.gguf"
-
+MODEL_NAME = MODEL_NAME # keep for internal refs if any
 
 class LocalAIEngine:
     _model = None
+    _init_attempted = False
 
     def __init__(self):
-        if LocalAIEngine._model is None:
+        if LocalAIEngine._model is None and not LocalAIEngine._init_attempted:
+            LocalAIEngine._init_attempted = True
+            
+            if not ModelManager.is_model_installed():
+                print("AI SYSTEM: Local model not found. Skipping initialization.")
+                return
+
             print("-" * 50)
-            print("AI SYSTEM: Initializing Local Model (orca-mini-3b)...")
-            print("NOTE: You may see 'Failed to load...dll' errors below.")
-            print("      These are NORMAL if you don't have a specific NVIDIA GPU.")
-            print("      The system will automatically fall back to CPU mode.")
+            print("AI SYSTEM: Initializing Local Model...")
             print("-" * 50)
             
             try:
                 LocalAIEngine._model = GPT4All(
                     model_name=MODEL_NAME,
-                    model_path=str(MODEL_PATH),
-                    allow_download=True,
+                    model_path=ModelManager.get_model_path(),
+                    allow_download=False, # We handle download manually now
+                    device="cpu" # explicit fallback
                 )
                 print("Local AI Model loaded successfully.")
             except Exception as e:
@@ -44,7 +45,13 @@ class LocalAIEngine:
 
         try:
             if LocalAIEngine._model is None:
-                return "Error: AI Model not loaded (check console logs)."
+                if not ModelManager.is_model_installed():
+                     return "Error: Local AI Model not installed. Please go to Settings to download it."
+                
+                # Try lazy load if installed but not loaded
+                self.__init__()
+                if LocalAIEngine._model is None:
+                    return "Error: Failed to load AI Model. Check logs."
 
             with LocalAIEngine._model.chat_session():
                 response = LocalAIEngine._model.generate(

@@ -30,6 +30,48 @@ CREATE TABLE IF NOT EXISTS metrics (
     download_kb REAL,
     gpu_percent REAL
 );
+
+CREATE TABLE IF NOT EXISTS anomaly_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    anomaly_type TEXT NOT NULL,
+    severity TEXT NOT NULL,
+    score REAL,
+    description TEXT,
+    resource_values TEXT
+);
+
+CREATE TABLE IF NOT EXISTS alert_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    alert_type TEXT NOT NULL,
+    title TEXT,
+    message TEXT,
+    acknowledged INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS overload_predictions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    risk_level TEXT NOT NULL,
+    confidence REAL,
+    time_to_overload REAL,
+    primary_stressors TEXT,
+    predicted_values TEXT,
+    actual_outcome TEXT,
+    prevention_taken TEXT
+);
+
+CREATE TABLE IF NOT EXISTS system_stress_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    stress_index REAL,
+    cpu_stress REAL,
+    memory_stress REAL,
+    disk_stress REAL,
+    network_stress REAL,
+    gpu_stress REAL
+);
 """
 
 def initialize_database() -> None:

@@ -21,3 +21,9 @@ models/
 # Logs
 DEBUG_LOG.md
 *.log
+
+# Build Artifacts
+dist/
+build/
+*.spec
+

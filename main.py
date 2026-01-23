@@ -21,13 +21,15 @@ from app.storage.reader import read_recent_metrics
 from app.ml.features import batch_features, FEATURE_ORDER
 from app.ml.normalizer import FeatureNormalizer
 from app.ml.anomaly import AnomalyDetector
-from app.ml.forecast import ResourceForecaster
+from app.ml.enhanced_forecaster import EnhancedResourceForecaster
+from app.ml.overload_detector import OverloadDetector
 
 from app.intelligence.anomaly_engine import interpret_anomalies
 from app.intelligence.forecast_engine import interpret_forecast
 from app.intelligence.health_state import compute_health_state
 
 from app.logic.decision_engine import decide_actions
+from app.logic.enhanced_decision_engine import enhanced_decide_actions
 from app.logic.action_router import map_actions_to_commands
 
 from app.notifications.rules import should_notify
@@ -35,6 +37,7 @@ from app.notifications.throttle import NotificationThrottle
 from app.notifications.toast import show_toast
 
 from app.ui.app_shell import run_ui
+from app.ui.theme import DARK_THEME, Palette
 
 
 # -------------------------------------------------
@@ -87,7 +90,8 @@ async def storage_consumer(event_bus: EventBus) -> None:
 async def decision_pipeline(
     detector: AnomalyDetector,
     normalizer: FeatureNormalizer,
-    forecaster: ResourceForecaster,
+    forecaster: EnhancedResourceForecaster,
+    overload_detector: OverloadDetector,
     throttle: NotificationThrottle
 ) -> None:
     metrics = read_recent_metrics(minutes=10)
@@ -106,12 +110,21 @@ async def decision_pipeline(
         FEATURE_ORDER
     )
 
+    # Multi-resource forecasting
+    if hasattr(forecaster, 'predict_all_resources'):
+        all_forecasts = forecaster.predict_all_resources(metrics)
+    else:
+        all_forecasts = {}
+
+    # Overload prediction
+    overload_risk = overload_detector.predict_overload_risk(all_forecasts)
+
+    # Legacy memory forecast for health state (compat)
     mem_series = [
         m["memory_percent"]
         for m in metrics
         if m.get("memory_percent") is not None
     ]
-
     forecast_raw = forecaster.predict(values=mem_series)
     forecast = interpret_forecast(
         resource="memory",
@@ -121,14 +134,16 @@ async def decision_pipeline(
 
     health = compute_health_state(anomalies, [forecast])
 
-    decision = decide_actions(
+    # Enhanced decision making
+    decision = enhanced_decide_actions(
         health_state=health,
         anomalies=anomalies,
-        forecasts=[forecast]
+        forecasts=[forecast],
+        overload_predictions=overload_risk
     )
 
     if should_notify(decision) and throttle.allow():
-        intents = map_actions_to_commands(decision["actions"])
+        intents = map_actions_to_commands(decision.get("actions", []))
         show_toast(
             title="SysSentinel AI",
             message=f"System health: {health['overall_status']}",
@@ -149,7 +164,8 @@ async def backend_main():
 
     detector = AnomalyDetector()
     normalizer = FeatureNormalizer()
-    forecaster = ResourceForecaster()
+    forecaster = EnhancedResourceForecaster()
+    overload_detector = OverloadDetector()
     throttle = NotificationThrottle(cooldown_seconds=300)
 
     scheduler.every(2, lambda: collect_and_publish(event_bus))
@@ -160,6 +176,7 @@ async def backend_main():
             detector,
             normalizer,
             forecaster,
+            overload_detector,
             throttle
         )
     )
@@ -171,15 +188,35 @@ async def backend_main():
 
 
 # -------------------------------------------------
+# Loading Page Integration
+# -------------------------------------------------
+
+
+# -------------------------------------------------
+# UI + Backend entrypoint
+# -------------------------------------------------
+# -------------------------------------------------
 # UI + Backend entrypoint
 # -------------------------------------------------
 async def app_entry(page: ft.Page):
-    # start backend in background
+    """Main app entry point."""
+    page.title = "SysSentinel AI"
+    page.window_width = 1280
+    page.window_height = 850
+    page.theme_mode = ft.ThemeMode.DARK
+    page.padding = 0
+    page.bgcolor = Palette.BG_DARK
+    
+    # Initialize backend components holder
+    page.backend_components = {}
+    
+    # Start tray
     start_tray(lambda: page.window_show())
-
+    
+    # Start backend logic
     asyncio.create_task(backend_main())
-
-    # start UI
+    
+    # Run main UI
     run_ui(page)
 
 

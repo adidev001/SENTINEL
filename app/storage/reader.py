@@ -17,3 +17,21 @@ def read_recent_metrics(minutes: int) -> List[Dict]:
     rows = [dict(row) for row in cur.fetchall()]
     conn.close()
     return rows
+
+def read_latest_overload_prediction() -> Dict:
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        SELECT *
+        FROM overload_predictions
+        ORDER BY timestamp DESC
+        LIMIT 1
+    """)
+    
+    row = cur.fetchone()
+    conn.close()
+    
+    if row:
+        return dict(row)
+    return {}

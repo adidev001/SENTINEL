@@ -14,4 +14,7 @@ scikit-learn
 keyring
 
 # Local AI (optional for now – can be installed later)
-# llama-cpp-python
+# Local AI & Utilities
+gpt4all
+requests
+Pillow

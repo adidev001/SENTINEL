@@ -5,6 +5,7 @@ import flet as ft
 from app.ui.sidebar import build_sidebar
 from app.ui.theme import DARK_THEME, Palette
 from app.ui.components import MetricCard, HealthBadge, NeonChart
+from app.ui.components.overload_indicator import OverloadIndicator
 
 from app.ui.pages import dashboard, performance, analytics, ai_chat, settings
 
@@ -19,8 +20,21 @@ from app.intelligence.anomaly_engine import interpret_anomalies
 from app.intelligence.forecast_engine import interpret_forecast
 from app.intelligence.health_state import compute_health_state
 
+from app.alerts.alert_manager import AlertManager
+from app.automation.process_automation import ProcessAutomation
+import json
 
 def run_ui(page: ft.Page):
+    # Initialize Managers
+    alert_manager = AlertManager()
+    automation = ProcessAutomation()
+    
+    # helper to load config for thresholds
+    def get_config():
+        try:
+           with open("config.json", "r") as f: return json.load(f)
+        except: return {}
+
     # --------------------------------------------------
     # Window & theme
     # --------------------------------------------------
@@ -50,6 +64,7 @@ def run_ui(page: ft.Page):
     gpu_card = MetricCard("GPU", "N/A", ft.Icons.GRAPHIC_EQ)
 
     health_badge = HealthBadge(status="ok")
+    overload_indicator = OverloadIndicator()
     
     # Chart Data (Stores last 30 points)
     chart_data = [0.0] * 30
@@ -192,18 +207,103 @@ def run_ui(page: ft.Page):
                     disk_card.update_value(f"{disk_val:.1f}% ({disk_usage.used // (1024**3)}/{disk_usage.total // (1024**3)} GB)")
                     net_card.update_value(f"↑{latest.get('upload_kb',0)/1024:.1f} ↓{latest.get('download_kb',0)/1024:.1f} Mbps")
                     gpu = latest.get("gpu_percent")
-                    if gpu is not None: gpu_card.update_value(f"{gpu:.1f}%")
+                    if gpu is not None: 
+                        gpu_card.update_value(f"{gpu:.1f}%")
+                    else:
+                        gpu_card.update_value("N/A")
                     
+                    # Update charts
                     chart_data.pop(0)
                     chart_data.append(float(mem_val))
                     main_chart.update_chart(chart_data)
                     cpu_chart_data.pop(0)
                     cpu_chart_data.append(float(cpu_val))
                     cpu_chart.update_chart(cpu_chart_data)
+
+                    # ---------------------------
+                    # Alerts & Automation
+                    # ---------------------------
+                    config = get_config()
                     
+                    if config.get("alerts_enabled", True):
+                        # CPU Alert
+                        cpu_crit = config.get("cpu_critical", 90)
+                        cpu_warn = config.get("cpu_warning", 75)
+                        if cpu_val >= cpu_crit:
+                            alert_manager.trigger_alert("cpu_crit", "Critical CPU Usage", f"CPU is at {cpu_val:.1f}%", "critical")
+                        elif cpu_val >= cpu_warn:
+                            alert_manager.trigger_alert("cpu_warn", "High CPU Usage", f"CPU is at {cpu_val:.1f}%", "warning")
+                            
+                        # Memory Alert
+                        mem_crit = config.get("mem_critical", 95)
+                        mem_warn = config.get("mem_warning", 80)
+                        if mem_val >= mem_crit:
+                            alert_manager.trigger_alert("mem_crit", "Critical Memory Usage", f"Memory is at {mem_val:.1f}%", "critical")
+                        elif mem_val >= mem_warn:
+                            alert_manager.trigger_alert("mem_warn", "High Memory Usage", f"Memory is at {mem_val:.1f}%", "warning")
+                    
+                    # Process Automation
+                    if config.get("automation_enabled", False):
+                        restarted = automation.check_and_restart_processes()
+                        if restarted:
+                            for proc in restarted:
+                                alert_manager.trigger_alert(f"restart_{proc}", "Process Restarted", f"Successfully restarted {proc}", "info")
+                    
+                    # ML Anomaly Detection
                     if len(rows) >= 5:
-                        health = compute_health_state([], []) # Simplified call for speed, full logic was preserved in mind but minimizing code churn
-                        health_badge.set_status(health["overall_status"]) # Keeping it simple to ensure it runs
+                        try:
+                            # Build feature matrix
+                            X = batch_features(rows)
+                            Xn = normalizer.fit_transform(X)
+                            
+                            # Fit detector if not fitted
+                            if not detector.fitted:
+                                detector.fit(Xn)
+                            
+                            # Score and detect anomalies
+                            scores = detector.score(Xn)
+                            anomalies = interpret_anomalies(
+                                scores[-len(FEATURE_ORDER):],
+                                FEATURE_ORDER,
+                            )
+                            
+                            # Save detected anomalies to database
+                            for anomaly in anomalies:
+                                if anomaly.get("score", 0) >= 70:  # Only save significant anomalies
+                                    from app.ml.anomaly import AnomalyDetector as AD
+                                    AD.save_anomaly(
+                                        anomaly_type=anomaly.get("feature", "unknown"),
+                                        severity="critical" if anomaly.get("score", 0) >= 90 else "warning",
+                                        score=anomaly.get("score", 0),
+                                        description=anomaly.get("message", ""),
+                                        resource_values={
+                                            "cpu": cpu_val,
+                                            "memory": mem_val,
+                                            "disk": disk_val
+                                        }
+                                    )
+                            
+                            # Forecasting
+                            mem_series = [r["memory_percent"] for r in rows if r.get("memory_percent")]
+                            forecast_raw = forecaster.predict(mem_series)
+                            forecast = interpret_forecast("memory", forecast_raw, 95.0)
+                            
+                            # Compute health state
+                            health = compute_health_state(anomalies, [forecast])
+                            status = health["overall_status"]
+                            health_badge.set_status(status)
+                            
+                            health_badge.set_status(health["overall_status"])
+                            
+                        except Exception as e:
+                            # Fallback to simple health
+                            health = compute_health_state([], [])
+                            health_badge.set_status(health["overall_status"])
+
+                    # Update Overload Indicator
+                    from app.storage.reader import read_latest_overload_prediction
+                    overload_data = read_latest_overload_prediction()
+                    overload_indicator.update_overload_status(overload_data)
                         
                 page.update()
             except Exception:
@@ -287,7 +387,7 @@ def run_ui(page: ft.Page):
         idx = e.control.selected_index
         if idx == 0:
             content_area.content = dashboard.view(
-                cpu_card, mem_card, disk_card, net_card, gpu_card, health_badge, cpu_chart, main_chart
+                cpu_card, mem_card, disk_card, net_card, gpu_card, health_badge, cpu_chart, main_chart, overload_indicator
             )
         elif idx == 1:
             content_area.content = performance.view(apps_table, services_table)
@@ -308,7 +408,7 @@ def run_ui(page: ft.Page):
     
     # Initialize Dashboard View
     content_area.content = dashboard.view(
-        cpu_card, mem_card, disk_card, net_card, gpu_card, health_badge, cpu_chart, main_chart
+        cpu_card, mem_card, disk_card, net_card, gpu_card, health_badge, cpu_chart, main_chart, overload_indicator
     )
 
     # Ambient Background

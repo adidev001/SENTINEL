@@ -10,6 +10,7 @@ def view(
     health_badge: ft.Control,
     cpu_chart: ft.Control,
     mem_chart: ft.Control,
+    overload_indicator: ft.Control,
 ):
     # Disk scan results area
     disk_scan_results = ft.Column([
@@ -87,6 +88,10 @@ def view(
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN
             ),
+            ft.Divider(color="transparent", height=10),
+            
+            # Overload Warning
+            overload_indicator,
             ft.Divider(color="transparent", height=10),
             
             # Metric Cards Area (Responsive Wrap)
