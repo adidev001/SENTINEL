@@ -88,7 +88,7 @@
 <td width="33%">
 
 **Cloud AI Engine**
-- Google Gemini API integration
+- OpenRouter API integration
 - Enhanced analysis capabilities
 - Real-time threat intelligence
 - Natural language queries
@@ -200,7 +200,7 @@ SENTINEL employs a modular, event-driven architecture designed for performance, 
                           │  • Windows APIs     │
                           │  • Email SMTP       │
                           │  • Webhooks         │
-                          │  • Gemini API       │
+                          │  • OpenRouter API   │
                           └─────────────────────┘
 ```
 
@@ -255,7 +255,7 @@ SENTINEL/
 │   │
 │   ├── 🧠 intelligence/                # AI Engines
 │   │   ├── local_engine.py             # GPT4All integration
-│   │   ├── cloud_engine.py             # Gemini API client
+│   │   ├── cloud_engine.py             # OpenRouter API client
 │   │   └── health_state.py             # System health analyzer
 │   │
 │   ├── 🎯 logic/                       # Business Logic
@@ -385,7 +385,7 @@ Access AI configuration through **Settings → AI Configuration**
 | Mode | Description | Requirements | Use Case |
 |------|-------------|--------------|----------|
 | **Local** | GPT4All (Orca Mini 3B) | ~4GB disk space for model download | Privacy-focused, offline diagnostics |
-| **Cloud** | Google Gemini API | API key from Google AI Studio | Enhanced analysis, real-time threat intelligence |
+| **Cloud** | OpenRouter API | API key from openrouter.ai | Enhanced analysis, multi-model access |
 | **Disabled** | AI features turned off | None | Minimal resource usage, metrics-only monitoring |
 
 ### Alert Threshold Configuration
@@ -434,7 +434,7 @@ Customize warning and critical thresholds through **Settings → Alert Configura
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
 | **Local AI** | GPT4All | Offline natural language diagnostics |
-| **Cloud AI** | Google Gemini API | Enhanced cloud-based analysis |
+| **Cloud AI** | OpenRouter API | Enhanced cloud-based analysis |
 | **Anomaly Detection** | Scikit-learn (Isolation Forest) | Unsupervised outlier detection |
 | **Time Series** | Custom forecasting algorithms | Resource usage prediction |
 
@@ -513,7 +513,7 @@ All application data is stored in the user's AppData directory:
 
 **For Cloud Mode:**
 - Verify API key in Settings → AI Configuration
-- Get free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+- Get API key from [OpenRouter](https://openrouter.ai/keys)
 - Check internet connectivity
 
 </details>
@@ -624,7 +624,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 - **Flet Team** - For the excellent cross-platform UI framework
 - **GPT4All** - For providing accessible local AI models
-- **Google** - For the Gemini API
+- **OpenRouter** - For the multi-model cloud API
 - **Open Source Community** - For the countless libraries that make this possible
 
 ---
