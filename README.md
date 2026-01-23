@@ -16,9 +16,9 @@
 
 ### 📥 Download
 
-[![Download SENTINEL](https://img.shields.io/badge/Download-SENTINEL.exe-00D4AA?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/adidev001/SENTINEL/releases/latest/download/SENTINEL.exe)
+[![Download SENTINEL](https://img.shields.io/badge/Download-SENTINEL.exe-00D4AA?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/adidev001/SENTINEL/releases/latest)
 
-> **Latest Release:** [View all releases](https://github.com/adidev001/SENTINEL/releases) | **Size:** ~150MB | **Platform:** Windows 10/11
+> **[View all releases](https://github.com/adidev001/SENTINEL/releases)** | **Size:** ~150MB | **Platform:** Windows 10/11
 
 <br/>
 
