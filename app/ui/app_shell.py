@@ -193,11 +193,13 @@ def run_ui(page: ft.Page):
     # --------------------------------------------------
     async def refresh_metrics_and_health():
         await asyncio.sleep(1)
+        from app.core.logger import logger
         while True:
             try:
                 rows = read_recent_metrics(minutes=10)
                 if rows:
                     latest = rows[-1]
+                    logger.debug(f"UI Read Metric: CPU={latest.get('cpu_percent')}")
                     cpu_val = latest.get('cpu_percent', 0)
                     cpu_card.update_value(f"{cpu_val:.1f}%")
                     mem_val = latest.get('memory_percent', 0)
@@ -305,9 +307,12 @@ def run_ui(page: ft.Page):
                     overload_data = read_latest_overload_prediction()
                     overload_indicator.update_overload_status(overload_data)
                         
+                else:
+                    logger.warning("UI Read: No metrics found in last 10 minutes")
+                        
                 page.update()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"UI Loop Error: {e}", exc_info=True)
             await asyncio.sleep(2)
 
     # --------------------------------------------------

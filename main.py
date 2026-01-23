@@ -43,10 +43,11 @@ from app.ui.theme import DARK_THEME, Palette
 # -------------------------------------------------
 # Collectors → EventBus
 # -------------------------------------------------
+from app.core.logger import logger
+
 async def collect_and_publish(event_bus: EventBus) -> None:
     try:
         # Run collectors in parallel threads to avoid blocking the event loop
-        # This fixes the "slow" UI issue
         cpu, mem, disk, net, gpu = await asyncio.gather(
             asyncio.to_thread(collect_cpu),
             asyncio.to_thread(collect_memory),
@@ -61,6 +62,9 @@ async def collect_and_publish(event_bus: EventBus) -> None:
         payload.update(disk)
         payload.update(net)
         payload.update(gpu)
+        
+        # Log successful collection (debug level)
+        logger.debug(f"Collected metrics: CPU={cpu.get('cpu_percent')}% Mem={mem.get('percent')}%")
 
         await event_bus.publish({
             "type": "metrics",
@@ -68,8 +72,7 @@ async def collect_and_publish(event_bus: EventBus) -> None:
             "payload": payload
         })
     except Exception as e:
-        # Prevent the scheduler from stopping if one collection fails
-        # In a real app we might log this to a file
+        logger.error(f"Error in collect_and_publish: {e}", exc_info=True)
         print(f"Error in collect_and_publish: {e}")
 
 
@@ -171,7 +174,11 @@ async def decision_pipeline(
 # -------------------------------------------------
 async def backend_main():
     from app.storage.database import initialize_database
-    initialize_database()
+    try:
+        initialize_database()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database init failed: {e}", exc_info=True)
 
     event_bus = EventBus()
     scheduler = Scheduler()

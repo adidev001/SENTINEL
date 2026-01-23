@@ -17,6 +17,11 @@ def get_connection() -> sqlite3.Connection:
         check_same_thread=False
     )
     conn.row_factory = sqlite3.Row
+    # Log connection
+    try:
+        from app.core.logger import logger
+        logger.info(f"Connected to DB at {DB_PATH}")
+    except: pass
     return conn
 
 
