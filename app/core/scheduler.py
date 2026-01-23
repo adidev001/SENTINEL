@@ -17,7 +17,10 @@ class Scheduler:
         """
         async def _runner():
             while True:
-                await job()
+                try:
+                    await job()
+                except Exception as e:
+                    print(f"Scheduler job failed: {e}")
                 await asyncio.sleep(interval_seconds)
 
         self._tasks.append(asyncio.create_task(_runner()))

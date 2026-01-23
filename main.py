@@ -44,28 +44,33 @@ from app.ui.theme import DARK_THEME, Palette
 # Collectors → EventBus
 # -------------------------------------------------
 async def collect_and_publish(event_bus: EventBus) -> None:
-    # Run collectors in parallel threads to avoid blocking the event loop
-    # This fixes the "slow" UI issue
-    cpu, mem, disk, net, gpu = await asyncio.gather(
-        asyncio.to_thread(collect_cpu),
-        asyncio.to_thread(collect_memory),
-        asyncio.to_thread(collect_disk),
-        asyncio.to_thread(collect_network),
-        asyncio.to_thread(collect_gpu)
-    )
+    try:
+        # Run collectors in parallel threads to avoid blocking the event loop
+        # This fixes the "slow" UI issue
+        cpu, mem, disk, net, gpu = await asyncio.gather(
+            asyncio.to_thread(collect_cpu),
+            asyncio.to_thread(collect_memory),
+            asyncio.to_thread(collect_disk),
+            asyncio.to_thread(collect_network),
+            asyncio.to_thread(collect_gpu)
+        )
 
-    payload = {}
-    payload.update(cpu)
-    payload.update(mem)
-    payload.update(disk)
-    payload.update(net)
-    payload.update(gpu)
+        payload = {}
+        payload.update(cpu)
+        payload.update(mem)
+        payload.update(disk)
+        payload.update(net)
+        payload.update(gpu)
 
-    await event_bus.publish({
-        "type": "metrics",
-        "timestamp": datetime.utcnow().isoformat(),
-        "payload": payload
-    })
+        await event_bus.publish({
+            "type": "metrics",
+            "timestamp": datetime.utcnow().isoformat(),
+            "payload": payload
+        })
+    except Exception as e:
+        # Prevent the scheduler from stopping if one collection fails
+        # In a real app we might log this to a file
+        print(f"Error in collect_and_publish: {e}")
 
 
 # -------------------------------------------------
