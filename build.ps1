@@ -15,6 +15,7 @@ if (-Not (Test-Path ".\.venv\Scripts\flet.exe")) {
 # --hidden-import: Ensure dynamic imports are caught (e.g. engine implementations)
 
 .\.venv\Scripts\flet.exe pack main.py `
+    --noconfirm `
     --name "SysSentinel" `
     --icon "assets/icon.ico" `
     --add-data "assets;assets" `

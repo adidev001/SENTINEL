@@ -136,7 +136,19 @@ class ProcessAutomation:
             time.sleep(self.config.get('restart_delay_seconds', 5))
             
             # Start process
-            subprocess.Popen(command, shell=True)
+            startupinfo = None
+            creationflags = 0
+            if os.name == 'nt':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                creationflags = subprocess.CREATE_NO_WINDOW
+
+            subprocess.Popen(
+                command, 
+                shell=True, 
+                startupinfo=startupinfo, 
+                creationflags=creationflags
+            )
             
             print(f"Restarted process: {proc_config['name']}")
             return True

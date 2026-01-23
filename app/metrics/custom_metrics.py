@@ -89,7 +89,20 @@ class CustomMetricsManager:
             
             # Otherwise execute as shell command
             import subprocess
-            result = subprocess.check_output(command, shell=True, text=True)
+            startupinfo = None
+            creationflags = 0
+            if os.name == 'nt':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                creationflags = subprocess.CREATE_NO_WINDOW
+
+            result = subprocess.check_output(
+                command, 
+                shell=True, 
+                text=True, 
+                startupinfo=startupinfo, 
+                creationflags=creationflags
+            )
             return float(result.strip())
             
         except Exception as e:
