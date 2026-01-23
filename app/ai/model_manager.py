@@ -9,7 +9,7 @@ from pathlib import Path
 # Using application data directory for standalone persistence
 if getattr(sys, 'frozen', False):
     # If packaged (EXE), use user's AppData
-    app_data = Path(os.getenv('APPDATA')) / "SysSentinel"
+    app_data = Path(os.getenv('APPDATA')) / "SENTINEL"
 else:
     # If development, use project root
     app_data = Path(__file__).resolve().parent.parent.parent

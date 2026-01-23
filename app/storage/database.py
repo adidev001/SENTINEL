@@ -3,7 +3,11 @@
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path("data/sys_sentinel.db")
+import os
+
+# Use APPDATA for persistent storage
+app_data = Path(os.getenv("APPDATA")) / "SENTINEL"
+DB_PATH = app_data / "data" / "sys_sentinel.db"
 
 def get_connection() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
