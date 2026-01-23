@@ -81,6 +81,14 @@ CREATE TABLE IF NOT EXISTS system_stress_history (
     network_stress REAL,
     gpu_stress REAL
 );
+
+CREATE TABLE IF NOT EXISTS anomalies (
+    timestamp TEXT NOT NULL,
+    resource TEXT,
+    score INTEGER,
+    severity TEXT,
+    details TEXT
+);
 """
 
 def initialize_database() -> None:
