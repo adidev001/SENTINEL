@@ -50,9 +50,10 @@ def view(ai_context=None):
         multiline=True,
         min_lines=1,
         max_lines=5,
+        shift_enter=True,  # Enter sends, Shift+Enter for new line
         border_color=ft.Colors.TRANSPARENT,
         focused_border_color=ft.Colors.TRANSPARENT,
-        on_submit=lambda e: send_message(e),
+        on_submit=None,  # Will be set after send_message is defined
     )
 
     def add_message(text, sender="user", save_to_history=True):
@@ -207,6 +208,7 @@ Answer using the data above. If user asks for a command, provide it used specifi
             used_mode = {"rag": "RAG", "local": "Local", "cloud": "Cloud"}.get(current_mode, "RAG")
             
             ai_resp = None
+            should_fallback = False
             try:
                 if current_mode == "rag":
                     rag_engine.set_context(fresh_context_text if fresh_context_text else context_text)
@@ -215,16 +217,21 @@ Answer using the data above. If user asks for a command, provide it used specifi
                     if not ModelManager.is_model_installed():
                         ai_resp = "⚠️ Local Model not found. Please go to Settings > AI Capabilities to download it."
                         used_mode = "System"
+                        should_fallback = True
                     else:
                         ai_resp = local_engine.generate(enhanced_prompt, "")
                 elif current_mode == "cloud":
                     current_cloud_engine = CloudAIEngine(api_key=current_config.get('api_key', ''))
                     ai_resp = current_cloud_engine.generate(enhanced_prompt, "")
+                    # Only fallback on actual API errors (these start with ⚠️ and contain specific error messages)
+                    if ai_resp and ai_resp.startswith("⚠️") and ("Error" in ai_resp or "No API key" in ai_resp or "Invalid API key" in ai_resp or "timed out" in ai_resp):
+                        should_fallback = True
                 
-                if ai_resp and "⚠️" in ai_resp:
-                     raise Exception("Primary mode failed")
             except Exception as e:
-                # Fallback
+                should_fallback = True
+            
+            # Fallback to RAG if primary mode failed
+            if should_fallback:
                 try:
                     rag_engine.set_context(fresh_context_text if fresh_context_text else context_text)
                     ai_resp = rag_engine.generate(user_text)
@@ -251,6 +258,8 @@ Answer using the data above. If user asks for a command, provide it used specifi
         chat_history.clear_history()
         messages.update()
 
+    # Set the on_submit handler after send_message is defined
+    input_box.on_submit = send_message
     return ft.Column(
         [
             # Header

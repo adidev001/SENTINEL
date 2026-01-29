@@ -289,7 +289,7 @@ SENTINEL/
 │       │   └── settings.py             # Configuration panel
 │       │
 │       ├── app_shell.py                # Main application shell
-│       ├── sidebar.py                  # Navigation sidebar
+│       ├── sidebar.py                  # Navigation sidebar.
 │       └── theme.py                    # Cyberpunk theme colors
 │
 └── 📦 dist/
@@ -645,4 +645,4 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 <sub>Made with ❤️ and Python • Empowering users with intelligent system monitoring</sub>
 
-</div>
+</divr.

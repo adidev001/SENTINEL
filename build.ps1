@@ -31,7 +31,7 @@ if (Test-Path "SysSentinel.spec") { Remove-Item "SysSentinel.spec" -Force }
     --icon "assets/icon.ico" `
     --add-data "assets;assets" `
     --product-name "SysSentinel AI" `
-    --product-version "1.0.0" `
+    --product-version "2.0.0" `
     --copyright "Copyright (c) 2024 Devansh & Jahnavi" `
     --hidden-import "app.intelligence.local_ai" `
     --hidden-import "app.intelligence.cloud_ai" `

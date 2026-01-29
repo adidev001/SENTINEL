@@ -143,9 +143,13 @@ def run_ui(page: ft.Page):
     def terminate_handler(pid, name, cpu, mem):
         from app.system.process_manager import ProcessManager
         
+        # Create dialog reference to be used in callbacks
+        dialog = None
+        
         def close_dialog(e):
-            if page.dialog:
-                page.dialog.open = False
+            nonlocal dialog
+            if dialog:
+                dialog.open = False
                 page.update()
         
         def do_terminate(e):
@@ -169,12 +173,9 @@ def run_ui(page: ft.Page):
             ]
             title = ft.Text("Confirm Termination")
 
-        if page.dialog:
-            page.dialog.open = False
-            page.update()
-
-        page.dialog = ft.AlertDialog(title=title, content=dlg_content, actions=actions, modal=True)
-        page.dialog.open = True
+        dialog = ft.AlertDialog(title=title, content=dlg_content, actions=actions, modal=True)
+        page.overlay.append(dialog)
+        dialog.open = True
         page.update()
 
     def create_process_menu(pid, name, cpu, mem):

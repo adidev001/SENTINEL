@@ -388,7 +388,8 @@ def view(on_toggle_theme=None, on_ai_mode_change=None):
                     url="https://github.com/adidev001/SENTINEL.git",
                     color=ft.Colors.WHITE,
                     bgcolor=ft.Colors.BLUE_GREY_800
-                )
+                ),
+                ft.Text("Version 2.0.0", size=12, color=ft.Colors.GREY_500, weight=ft.FontWeight.W_500),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
