@@ -289,7 +289,7 @@ SENTINEL/
 │       │   └── settings.py             # Configuration panel
 │       │
 │       ├── app_shell.py                # Main application shell
-│       ├── sidebar.py                  # Navigation sidebar.
+│       ├── sidebar.py                  # Navigation sidebar
 │       └── theme.py                    # Cyberpunk theme colors
 │
 └── 📦 dist/
